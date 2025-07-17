@@ -315,8 +315,12 @@ async def import_data():
             record["_id"] = str(uuid.uuid4())
             records.append(record)
         
+        # Validate that we have records
+        if not records:
+            raise HTTPException(status_code=400, detail="No valid records found in CSV file")
+        
         # Insert into MongoDB
-        patients_collection.insert_many(records)
+        result = patients_collection.insert_many(records)
         
         return {"message": "Data imported successfully", "count": len(records)}
     except Exception as e:
