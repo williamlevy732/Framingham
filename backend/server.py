@@ -299,13 +299,24 @@ async def import_data():
             return {"message": "Data already imported", "count": patients_collection.count_documents({})}
         
         # Read CSV file
-        df = pd.read_csv("/app/framingham (2).csv")
+        df = pd.read_csv("/app/framingham (2).csv", skipinitialspace=True)
         
         # Remove any empty columns (caused by trailing comma)
         df = df.dropna(axis=1, how='all')
         
-        # Clean the data
-        df = df.dropna()
+        # Clean the data - only drop rows with missing key fields
+        df = df.dropna(subset=['male', 'age', 'sysBP', 'TenYearCHD'])
+        
+        # Fill missing values with appropriate defaults
+        df = df.fillna({
+            'education': 0,
+            'cigsPerDay': 0,
+            'BPMeds': 0,
+            'totChol': df['totChol'].median(),
+            'BMI': df['BMI'].median(),
+            'heartRate': df['heartRate'].median(),
+            'glucose': df['glucose'].median()
+        })
         
         # Check if DataFrame is empty
         if df.empty:
