@@ -304,6 +304,10 @@ async def import_data():
         # Clean the data
         df = df.dropna()
         
+        # Check if DataFrame is empty
+        if df.empty:
+            raise HTTPException(status_code=400, detail="CSV file is empty or could not be read")
+        
         # Convert to records and add IDs
         records = []
         for _, row in df.iterrows():
