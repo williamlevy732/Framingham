@@ -301,6 +301,9 @@ async def import_data():
         # Read CSV file
         df = pd.read_csv("/app/framingham (2).csv")
         
+        # Remove any empty columns (caused by trailing comma)
+        df = df.dropna(axis=1, how='all')
+        
         # Clean the data
         df = df.dropna()
         
