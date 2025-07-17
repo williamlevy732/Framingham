@@ -125,7 +125,7 @@ async def get_patients(
     limit: int = Query(100, ge=1, le=1000),
     age_min: Optional[int] = Query(None, ge=0),
     age_max: Optional[int] = Query(None, le=120),
-    bp_range: Optional[str] = Query(None, regex="^(low|normal|high)$"),
+    bp_range: Optional[str] = Query(None, pattern="^(low|normal|high)$"),
     chd_status: Optional[int] = Query(None, ge=0, le=1),
     gender: Optional[int] = Query(None, ge=0, le=1),
     search: Optional[str] = Query(None)
