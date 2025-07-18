@@ -240,6 +240,23 @@ const Home = () => {
         </Link>
 
         <Link
+          to="/model"
+          className="card hover:shadow-lg transition-shadow duration-300 group"
+        >
+          <div className="card-body">
+            <div className="flex items-center justify-between mb-4">
+              <Brain className="w-8 h-8 text-purple-600" />
+              <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-purple-600 transition-colors" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">CHD Prediction Model</h3>
+            <p className="text-gray-600 text-sm">
+              Use our trained logistic regression model to predict 10-year CHD risk 
+              based on patient characteristics and clinical data.
+            </p>
+          </div>
+        </Link>
+
+        <Link
           to="/conclusion"
           className="card hover:shadow-lg transition-shadow duration-300 group"
         >
