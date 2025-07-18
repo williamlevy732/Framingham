@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import DataExploration from './pages/DataExploration';
 import Visualizations from './pages/Visualizations';
+import ModelPrediction from './pages/ModelPrediction';
 import Conclusion from './pages/Conclusion';
 import './App.css';
 
@@ -17,6 +18,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/exploration" element={<DataExploration />} />
             <Route path="/visualizations" element={<Visualizations />} />
+            <Route path="/model" element={<ModelPrediction />} />
             <Route path="/conclusion" element={<Conclusion />} />
           </Routes>
         </main>
