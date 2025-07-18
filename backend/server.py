@@ -33,6 +33,16 @@ client = MongoClient(MONGO_URL)
 db = client.chd_analysis
 patients_collection = db.patients
 
+# Load the trained model and preprocessor
+try:
+    model = joblib.load("/app/model.pkl")
+    preprocessor = joblib.load("/app/preprocessor.pkl")
+    print("✅ Model and preprocessor loaded successfully")
+except Exception as e:
+    print(f"❌ Error loading model: {e}")
+    model = None
+    preprocessor = None
+
 # Pydantic models
 class Patient(BaseModel):
     id: str
