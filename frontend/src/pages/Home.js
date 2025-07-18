@@ -69,6 +69,14 @@ const Home = () => {
               <span>View Visualizations</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
+            <Link
+              to="/model"
+              className="flex items-center space-x-2 bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-500 transition-colors"
+            >
+              <Brain className="w-5 h-5" />
+              <span>Use Model</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </div>
