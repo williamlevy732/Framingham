@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Users, TrendingUp, Activity, ArrowRight, Database, BarChart3 } from 'lucide-react';
+import { Heart, Users, TrendingUp, Activity, ArrowRight, Database, BarChart3, Brain } from 'lucide-react';
 import { apiService } from '../utils/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
