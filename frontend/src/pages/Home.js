@@ -204,7 +204,7 @@ const Home = () => {
       </div>
 
       {/* Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Link
           to="/exploration"
           className="card hover:shadow-lg transition-shadow duration-300 group"
