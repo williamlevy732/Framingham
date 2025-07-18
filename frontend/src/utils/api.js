@@ -80,6 +80,18 @@ export const apiService = {
     return response.data;
   },
 
+  // Model prediction
+  predictCHD: async (inputData) => {
+    const response = await api.post('/api/predict', inputData);
+    return response.data;
+  },
+
+  // Model information
+  getModelInfo: async () => {
+    const response = await api.get('/api/model/info');
+    return response.data;
+  },
+
   // Health check
   healthCheck: async () => {
     const response = await api.get('/');
