@@ -1,210 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BarChart3, TrendingUp, AlertCircle, Activity, Eye, Info } from 'lucide-react';
-import { 
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, PieChart, Pie, Cell, ScatterPlot, Scatter, 
-  AreaChart, Area, ComposedChart, Legend
-} from 'recharts';
-import { apiService } from '../utils/api';
-import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorMessage from '../components/ErrorMessage';
 
 const Visualizations = () => {
-  const [activeTab, setActiveTab] = useState('kde');
-  const [visualizationData, setVisualizationData] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('age-education');
 
-  useEffect(() => {
-    loadVisualizationData();
-  }, []);
-
-  const loadVisualizationData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const [bpDistribution, bpBoxplot, ageHistogram, violinPlot] = await Promise.all([
-        apiService.getBloodPressureDistribution(),
-        apiService.getBloodPressureBoxplot(),
-        apiService.getAgeHistogram(),
-        apiService.getViolinPlot()
-      ]);
-
-      setVisualizationData({
-        bpDistribution,
-        bpBoxplot,
-        ageHistogram,
-        violinPlot
-      });
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load visualization data');
-    } finally {
-      setLoading(false);
+  const visualizations = [
+    {
+      id: 'age-education',
+      title: 'Age and Education Level of CHD Patients',
+      image: '/viz2.png',
+      description: 'Analysis of age and education level patterns in the first 200 CHD patients',
+      insights: [
+        'Higher education levels tend to correlate with better health outcomes',
+        'Age distribution shows predominance in middle-aged to elderly patients',
+        'Educational attainment varies significantly across age groups'
+      ],
+      patterns: 'The visualization reveals important demographic patterns in CHD patients, with education level serving as a potential socioeconomic indicator for cardiovascular health.'
+    },
+    {
+      id: 'age-education-smokers',
+      title: 'Age and Education Level - Smokers Highlighted',
+      image: '/viz1.png',
+      description: 'Same analysis with smoking status highlighted to show the impact of tobacco use',
+      insights: [
+        'Smokers are distributed across all age and education levels',
+        'Smoking habits show correlation with both age and educational background',
+        'Highlighted patterns reveal smoking as a significant risk factor'
+      ],
+      patterns: 'The smoking overlay demonstrates how tobacco use intersects with demographic factors, providing insights into lifestyle-related cardiovascular risk.'
+    },
+    {
+      id: 'chd-education',
+      title: 'CHD Incidence by Education Level',
+      image: '/viz3.png',
+      description: 'Distribution of coronary heart disease cases across different education levels',
+      insights: [
+        'Clear inverse relationship between education level and CHD incidence',
+        'Higher education associated with lower CHD rates',
+        'Socioeconomic factors play a significant role in cardiovascular health'
+      ],
+      patterns: 'This visualization highlights the importance of education as a predictor of health outcomes, likely reflecting access to healthcare, health literacy, and lifestyle factors.'
     }
-  };
-
-  const processKDEData = (data) => {
-    if (!data || !data.CHD || !data['No CHD']) return [];
-    
-    const chdValues = data.CHD.sort((a, b) => a - b);
-    const noChdValues = data['No CHD'].sort((a, b) => a - b);
-    
-    const minValue = Math.min(...chdValues, ...noChdValues);
-    const maxValue = Math.max(...chdValues, ...noChdValues);
-    
-    const result = [];
-    for (let i = minValue; i <= maxValue; i += 5) {
-      const chdCount = chdValues.filter(v => v >= i && v < i + 5).length;
-      const noChdCount = noChdValues.filter(v => v >= i && v < i + 5).length;
-      
-      result.push({
-        bloodPressure: i,
-        CHD: chdCount,
-        'No CHD': noChdCount
-      });
-    }
-    
-    return result;
-  };
-
-  const processBoxplotData = (data) => {
-    if (!data || !data.CHD || !data['No CHD']) return [];
-    
-    return [
-      {
-        category: 'No CHD',
-        q1: data['No CHD'].q1,
-        q2: data['No CHD'].q2,
-        q3: data['No CHD'].q3,
-        min: data['No CHD'].min,
-        max: data['No CHD'].max,
-        outliers: data['No CHD'].outliers.length
-      },
-      {
-        category: 'CHD',
-        q1: data.CHD.q1,
-        q2: data.CHD.q2,
-        q3: data.CHD.q3,
-        min: data.CHD.min,
-        max: data.CHD.max,
-        outliers: data.CHD.outliers.length
-      }
-    ];
-  };
-
-  const processHistogramData = (data) => {
-    if (!data || !data.counts || !data.bins) return [];
-    
-    const result = [];
-    for (let i = 0; i < data.counts.length; i++) {
-      result.push({
-        ageRange: `${Math.round(data.bins[i])}-${Math.round(data.bins[i + 1])}`,
-        count: data.counts[i],
-        frequency: (data.counts[i] / data.stats.total * 100).toFixed(1)
-      });
-    }
-    
-    return result;
-  };
-
-  const processViolinData = (data) => {
-    if (!data || !data.CHD || !data['No CHD']) return [];
-    
-    const result = [];
-    
-    // Process blood pressure data
-    const chdBP = data.CHD.sysBP;
-    const noChdBP = data['No CHD'].sysBP;
-    
-    const bpRanges = [
-      { range: '<120', label: 'Normal' },
-      { range: '120-139', label: 'Elevated' },
-      { range: '140-159', label: 'Stage 1' },
-      { range: '≥160', label: 'Stage 2' }
-    ];
-    
-    bpRanges.forEach(range => {
-      let chdCount = 0;
-      let noChdCount = 0;
-      
-      if (range.range === '<120') {
-        chdCount = chdBP.filter(bp => bp < 120).length;
-        noChdCount = noChdBP.filter(bp => bp < 120).length;
-      } else if (range.range === '120-139') {
-        chdCount = chdBP.filter(bp => bp >= 120 && bp < 140).length;
-        noChdCount = noChdBP.filter(bp => bp >= 120 && bp < 140).length;
-      } else if (range.range === '140-159') {
-        chdCount = chdBP.filter(bp => bp >= 140 && bp < 160).length;
-        noChdCount = noChdBP.filter(bp => bp >= 140 && bp < 160).length;
-      } else if (range.range === '≥160') {
-        chdCount = chdBP.filter(bp => bp >= 160).length;
-        noChdCount = noChdBP.filter(bp => bp >= 160).length;
-      }
-      
-      result.push({
-        category: range.label,
-        CHD: chdCount,
-        'No CHD': noChdCount
-      });
-    });
-    
-    return result;
-  };
-
-  const tabs = [
-    { id: 'kde', label: 'KDE Plot', icon: Activity },
-    { id: 'boxplot', label: 'Boxplot', icon: BarChart3 },
-    { id: 'histogram', label: 'Histogram', icon: TrendingUp },
-    { id: 'violin', label: 'Violin Plot', icon: Eye }
   ];
 
-  const insights = {
-    kde: {
-      title: "Blood Pressure Distribution Analysis",
-      observations: [
-        "Clear difference in blood pressure distributions between CHD and non-CHD groups",
-        "CHD patients show higher average systolic blood pressure",
-        "Distribution overlap suggests blood pressure as a risk factor, not absolute predictor"
-      ],
-      patterns: "CHD patients tend to cluster in higher blood pressure ranges, particularly above 140 mmHg"
-    },
-    boxplot: {
-      title: "Blood Pressure Outlier Analysis",
-      observations: [
-        "CHD group shows higher median blood pressure values",
-        "Significant outliers present in both groups",
-        "Wider interquartile range in CHD patients indicates greater variability"
-      ],
-      patterns: "Outliers in blood pressure measurements may represent extreme cases or measurement errors"
-    },
-    histogram: {
-      title: "Age Distribution and Skewness",
-      observations: [
-        `Age distribution shows ${visualizationData.ageHistogram?.stats?.skewness > 0 ? 'right' : 'left'} skewness`,
-        `Mean age: ${visualizationData.ageHistogram?.stats?.mean?.toFixed(1)} years`,
-        `Standard deviation: ${visualizationData.ageHistogram?.stats?.std?.toFixed(1)} years`
-      ],
-      patterns: "Age distribution provides insights into the demographic composition of the study population"
-    },
-    violin: {
-      title: "CHD vs Non-CHD Group Comparison",
-      observations: [
-        "Distinct patterns emerge when comparing CHD positive vs negative groups",
-        "Blood pressure categories show differential CHD risk",
-        "Stage 1 and Stage 2 hypertension show higher CHD prevalence"
-      ],
-      patterns: "Progressive increase in CHD risk with increasing blood pressure categories"
-    }
-  };
+  const tabs = [
+    { id: 'age-education', label: 'Age & Education', icon: Activity },
+    { id: 'age-education-smokers', label: 'Smokers Analysis', icon: TrendingUp },
+    { id: 'chd-education', label: 'CHD by Education', icon: BarChart3 }
+  ];
 
-  if (loading) {
-    return <LoadingSpinner size="large" text="Loading visualization data..." />;
-  }
-
-  if (error) {
-    return <ErrorMessage message={error} onRetry={loadVisualizationData} />;
-  }
+  const currentViz = visualizations.find(v => v.id === activeTab);
 
   return (
     <div className="space-y-6">
@@ -213,7 +58,7 @@ const Visualizations = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Visualization Gallery</h1>
           <p className="text-gray-600 mt-1">
-            Interactive charts and plots showing patterns in the CHD dataset
+            Explore comprehensive visualizations from the CHD data analysis
           </p>
         </div>
       </div>
@@ -239,110 +84,26 @@ const Visualizations = () => {
 
       {/* Visualization Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart */}
+        {/* Visualization Image */}
         <div className="lg:col-span-2">
           <div className="visualization-container">
-            {activeTab === 'kde' && (
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Blood Pressure Distribution (KDE Plot)</h3>
-                <ResponsiveContainer width="100%" height={400}>
-                  <AreaChart data={processKDEData(visualizationData.bpDistribution)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="bloodPressure" 
-                      label={{ value: 'Systolic Blood Pressure (mmHg)', position: 'insideBottom', offset: -5 }}
-                    />
-                    <YAxis 
-                      label={{ value: 'Frequency', angle: -90, position: 'insideLeft' }}
-                    />
-                    <Tooltip 
-                      formatter={(value, name) => [value, name]}
-                      labelFormatter={(label) => `Blood Pressure: ${label} mmHg`}
-                    />
-                    <Legend />
-                    <Area
-                      type="monotone"
-                      dataKey="No CHD"
-                      stackId="1"
-                      stroke="#10b981"
-                      fill="#10b981"
-                      fillOpacity={0.6}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="CHD"
-                      stackId="1"
-                      stroke="#ef4444"
-                      fill="#ef4444"
-                      fillOpacity={0.6}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+            <h3 className="text-lg font-semibold mb-4">{currentViz.title}</h3>
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <img 
+                src={currentViz.image} 
+                alt={currentViz.title}
+                className="w-full h-auto rounded-lg"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'block';
+                }}
+              />
+              <div className="hidden text-center py-8 text-gray-500">
+                <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                <p>Visualization image not available</p>
               </div>
-            )}
-
-            {activeTab === 'boxplot' && (
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Blood Pressure Boxplot Analysis</h3>
-                <ResponsiveContainer width="100%" height={400}>
-                  <ComposedChart data={processBoxplotData(visualizationData.bpBoxplot)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="category" />
-                    <YAxis 
-                      label={{ value: 'Systolic Blood Pressure (mmHg)', angle: -90, position: 'insideLeft' }}
-                    />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="q1" fill="#e5e7eb" name="Q1" />
-                    <Bar dataKey="q2" fill="#9ca3af" name="Median" />
-                    <Bar dataKey="q3" fill="#6b7280" name="Q3" />
-                    <Line type="monotone" dataKey="outliers" stroke="#ef4444" name="Outliers" />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-
-            {activeTab === 'histogram' && (
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Age Distribution Histogram</h3>
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={processHistogramData(visualizationData.ageHistogram)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="ageRange" 
-                      label={{ value: 'Age Range (years)', position: 'insideBottom', offset: -5 }}
-                    />
-                    <YAxis 
-                      label={{ value: 'Frequency', angle: -90, position: 'insideLeft' }}
-                    />
-                    <Tooltip 
-                      formatter={(value, name) => [value, name === 'count' ? 'Count' : 'Frequency %']}
-                    />
-                    <Legend />
-                    <Bar dataKey="count" fill="#3b82f6" name="Count" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-
-            {activeTab === 'violin' && (
-              <div>
-                <h3 className="text-lg font-semibold mb-4">CHD vs Non-CHD Comparison</h3>
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={processViolinData(visualizationData.violinPlot)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="category" />
-                    <YAxis 
-                      label={{ value: 'Number of Patients', angle: -90, position: 'insideLeft' }}
-                    />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="No CHD" fill="#10b981" name="No CHD" />
-                    <Bar dataKey="CHD" fill="#ef4444" name="CHD" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+            </div>
+            <p className="text-sm text-gray-600 mt-3">{currentViz.description}</p>
           </div>
         </div>
 
@@ -352,7 +113,7 @@ const Visualizations = () => {
             <div className="card-header">
               <h3 className="text-lg font-semibold flex items-center">
                 <Info className="w-5 h-5 mr-2" />
-                {insights[activeTab]?.title}
+                Analysis Insights
               </h3>
             </div>
             <div className="card-body">
@@ -360,10 +121,10 @@ const Visualizations = () => {
                 <div>
                   <h4 className="font-medium text-gray-700 mb-2">Key Observations:</h4>
                   <ul className="space-y-2">
-                    {insights[activeTab]?.observations.map((obs, index) => (
+                    {currentViz.insights.map((insight, index) => (
                       <li key={index} className="flex items-start space-x-2">
                         <AlertCircle className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm text-gray-600">{obs}</span>
+                        <span className="text-sm text-gray-600">{insight}</span>
                       </li>
                     ))}
                   </ul>
@@ -372,43 +133,62 @@ const Visualizations = () => {
                 <div>
                   <h4 className="font-medium text-gray-700 mb-2">Patterns Identified:</h4>
                   <p className="text-sm text-gray-600">
-                    {insights[activeTab]?.patterns}
+                    {currentViz.patterns}
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Statistics Card */}
-          {activeTab === 'histogram' && visualizationData.ageHistogram && (
-            <div className="card">
-              <div className="card-header">
-                <h3 className="text-lg font-semibold">Age Statistics</h3>
-              </div>
-              <div className="card-body">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Mean Age:</span>
-                    <span className="font-medium">{visualizationData.ageHistogram.stats.mean?.toFixed(1)} years</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Standard Deviation:</span>
-                    <span className="font-medium">{visualizationData.ageHistogram.stats.std?.toFixed(1)} years</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Skewness:</span>
-                    <span className={`font-medium ${visualizationData.ageHistogram.stats.skewness > 0 ? 'text-orange-600' : 'text-blue-600'}`}>
-                      {visualizationData.ageHistogram.stats.skewness?.toFixed(3)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Total Patients:</span>
-                    <span className="font-medium">{visualizationData.ageHistogram.stats.total?.toLocaleString()}</span>
-                  </div>
+          {/* Methodology Card */}
+          <div className="card">
+            <div className="card-header">
+              <h3 className="text-lg font-semibold">Methodology</h3>
+            </div>
+            <div className="card-body">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Data Source:</span>
+                  <span className="font-medium">Framingham Heart Study</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Analysis Tool:</span>
+                  <span className="font-medium">Python/Jupyter</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Visualization:</span>
+                  <span className="font-medium">Matplotlib/Seaborn</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Sample Size:</span>
+                  <span className="font-medium">4,238 patients</span>
                 </div>
               </div>
             </div>
-          )}
+          </div>
+
+          {/* Navigation Helper */}
+          <div className="card">
+            <div className="card-header">
+              <h3 className="text-lg font-semibold">What's Next?</h3>
+            </div>
+            <div className="card-body">
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2 text-sm">
+                  <Eye className="w-4 h-4 text-blue-500" />
+                  <span>Use the tabs above to explore different visualizations</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm">
+                  <BarChart3 className="w-4 h-4 text-green-500" />
+                  <span>Each chart reveals different aspects of the data</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm">
+                  <AlertCircle className="w-4 h-4 text-orange-500" />
+                  <span>Look for patterns in the key observations</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
