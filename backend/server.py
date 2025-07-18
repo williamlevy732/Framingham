@@ -299,7 +299,7 @@ async def import_data():
             return {"message": "Data already imported", "count": patients_collection.count_documents({})}
         
         # Read CSV file
-        df = pd.read_csv("/app/framingham (2).csv", skipinitialspace=True)
+        df = pd.read_csv("/app/framingham.csv", skipinitialspace=True)
         
         # Remove any empty columns (caused by trailing comma)
         df = df.dropna(axis=1, how='all')
