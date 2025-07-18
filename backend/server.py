@@ -325,6 +325,79 @@ async def get_violin_plot():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/predict", response_model=PredictionResult)
+async def predict_chd(input_data: PredictionInput):
+    """Predict CHD risk using the trained model"""
+    try:
+        if model is None or preprocessor is None:
+            raise HTTPException(status_code=500, detail="Model not loaded")
+        
+        # Convert input to DataFrame
+        input_df = pd.DataFrame([input_data.dict()])
+        
+        # Preprocess the input
+        processed_input = preprocessor.transform(input_df)
+        
+        # Make prediction
+        prediction = model.predict(processed_input)[0]
+        probability = model.predict_proba(processed_input)[0][1]  # Probability of CHD (class 1)
+        
+        # Determine risk level
+        if probability < 0.3:
+            risk_level = "Low"
+        elif probability < 0.7:
+            risk_level = "Moderate"
+        else:
+            risk_level = "High"
+        
+        # Identify risk factors
+        risk_factors = []
+        if input_data.age > 60:
+            risk_factors.append("Advanced age (>60 years)")
+        if input_data.sysBP > 140:
+            risk_factors.append("High blood pressure (>140 mmHg)")
+        if input_data.currentSmoker == 1:
+            risk_factors.append("Current smoker")
+        if input_data.diabetes == 1:
+            risk_factors.append("Diabetes")
+        if input_data.totChol > 240:
+            risk_factors.append("High cholesterol (>240 mg/dL)")
+        if input_data.BMI > 30:
+            risk_factors.append("Obesity (BMI >30)")
+        if input_data.prevalentHyp == 1:
+            risk_factors.append("Hypertension")
+        if input_data.male == 1 and input_data.age > 45:
+            risk_factors.append("Male over 45 years")
+        elif input_data.male == 0 and input_data.age > 55:
+            risk_factors.append("Female over 55 years")
+        
+        return PredictionResult(
+            prediction=int(prediction),
+            probability=round(probability, 4),
+            risk_level=risk_level,
+            risk_factors=risk_factors
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
+@app.get("/api/model/info")
+async def get_model_info():
+    """Get information about the loaded model"""
+    try:
+        if model is None or preprocessor is None:
+            return {"status": "error", "message": "Model not loaded"}
+        
+        return {
+            "status": "loaded",
+            "model_type": str(type(model).__name__),
+            "preprocessor_type": str(type(preprocessor).__name__),
+            "feature_names": list(preprocessor.feature_names_in_) if hasattr(preprocessor, 'feature_names_in_') else None,
+            "model_params": model.get_params() if hasattr(model, 'get_params') else None
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.post("/api/import-data")
 async def import_data():
     """Import data from CSV file"""
