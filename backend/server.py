@@ -78,6 +78,29 @@ class DatasetStats(BaseModel):
     bp_stats: dict
     key_variables: List[str]
 
+class PredictionInput(BaseModel):
+    male: int  # 0 for female, 1 for male
+    age: int
+    education: int  # 1-4 scale
+    currentSmoker: int  # 0 or 1
+    cigsPerDay: float
+    BPMeds: int  # 0 or 1
+    prevalentStroke: int  # 0 or 1
+    prevalentHyp: int  # 0 or 1
+    diabetes: int  # 0 or 1
+    totChol: float
+    sysBP: float
+    diaBP: float
+    BMI: float
+    heartRate: float
+    glucose: float
+
+class PredictionResult(BaseModel):
+    prediction: int  # 0 or 1
+    probability: float  # probability of CHD
+    risk_level: str  # "Low", "Moderate", "High"
+    risk_factors: List[str]
+
 @app.get("/")
 async def root():
     return {"message": "CHD Analysis API"}
